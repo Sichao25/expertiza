@@ -27,6 +27,35 @@ class TagPrompt < ActiveRecord::Base
     html.html_safe
   end
 
+  def duplicated_html_control(tag_prompt_deployment, answer, user_id)
+    html = ""
+    unless answer.nil?
+      stored_tags = AnswerTag.where(tag_prompt_deployment_id: tag_prompt_deployment.id, answer_id: answer.id, user_id: user_id)
+      stored_value = stored_tags.first.value
+
+      length_valid = false
+      if !tag_prompt_deployment.answer_length_threshold.nil?
+        length_valid = true if !answer.comments.nil? and (answer.comments.length > tag_prompt_deployment.answer_length_threshold)
+      else
+        length_valid = true
+      end
+
+      if length_valid and answer.question.type.eql?(tag_prompt_deployment.question_type)
+        case self.control_type.downcase
+          when "slider"
+            html = slider_control(answer, tag_prompt_deployment, stored_tags)
+          when "checkbox"
+            html = checkbox_control(answer, tag_prompt_deployment, stored_tags)
+        end
+      end
+    end
+    current_value = stored_tags.first.value
+    if stored_value != current_value
+      puts 'go'
+    end
+    html.html_safe
+  end
+
   def checkbox_control(answer, tag_prompt_deployment, stored_tags)
     html = ""
     value = "0"
@@ -87,4 +116,5 @@ class TagPrompt < ActiveRecord::Base
 
     html
   end
+
 end

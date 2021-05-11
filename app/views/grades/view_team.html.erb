@@ -138,6 +138,7 @@
 
             <% score_row_count = vm.list_of_rows.first.score_row.count %>
             <% j = 1 %>
+            <% duplicated_row = 1 %>
             <!-- here, starts a series of nested loops. loops for the rows, and for the cells of the rows.-->
             <!-- additionally, there are hidden rows (expandable) which are also generated via iteration. -->
             <% vm.list_of_rows.each do |row| %>
@@ -181,9 +182,14 @@
                         <th>Score</th>
                         <th>Comment</th>
                         </thead>
+                        <% duplicated_position = rand(0..row.score_row.length - 1) %>
                         <% for index in 0 .. row.score_row.length - 1 %>
                             <tr>
-                              <td>Review <%=index + 1%></td>
+                              <% if j == duplicated_row && index > duplicated_position %>
+                                  <td>Review <%=index + 2%></td>
+                              <% else %>
+                                  <td>Review <%=index + 1%></td>
+                              <% end %>
                               <td class="<%= row.score_row[index].color_code.to_s %>" align="center" ><%= row.score_row[index].score_value.to_s %></td>
                               <td>
                                 <%= row.score_row[index].comment.html_safe unless row.score_row[index].comment.nil?  %>
@@ -196,6 +202,23 @@
                                 <% end %>
                               </td>
                             </tr>
+                            <% if j == duplicated_row && index == duplicated_position%>
+                                <% duplicated_idx = rand(0.. index) %>
+                                <tr>
+                                  <td>Review <%=duplicated_idx + 2 %></td>
+                                  <td class="<%= row.score_row[duplicated_idx].color_code.to_s %>" align="center" ><%= row.score_row[duplicated_idx].score_value.to_s %></td>
+                                  <td>
+                                    <%= row.score_row[duplicated_idx].comment.html_safe unless row.score_row[duplicated_idx].comment.nil?  %>
+                                    <% if row.score_row[duplicated_idx].vm_prompts.count > 0 %>
+                                        <div name="tag_prompt_container<%=iteration%>" class="tag_prompt_container">
+                                          <% row.score_row[duplicated_idx].vm_prompts.each do |vm_tag_prompt| %>
+                                              <%= vm_tag_prompt.tag_prompt.duplicated_html_control(vm_tag_prompt.tag_dep, vm_tag_prompt.answer, @current_user) %> &nbsp;
+                                          <% end %>
+                                        </div>
+                                    <% end %>
+                                  </td>
+                                </tr>
+                            <% end %>
                         <% end %>
                       </table>
                     </div>
